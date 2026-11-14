@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Map installed Python distribution dependencies without third-party packages."""
 import argparse,json,re
+from pathlib import Path
 from importlib import metadata
 def norm(name):return re.sub(r"[-_.]+","-",name).lower()
 def build_graph(distributions):
  installed={norm(d["name"]):d for d in distributions};graph={k:[] for k in installed};missing={}
  for key,d in installed.items():
   for req in d.get("requires",[]) or []:
-   match=re.match(r"\\s*([A-Za-z0-9_.-]+)",req)
+   match=re.match(r"\s*([A-Za-z0-9_.-]+)",req)
    if not match:continue
    dep=norm(match.group(1))
    if dep in installed:graph[key].append(dep)
@@ -29,12 +30,12 @@ def tree(data,root):
   for child in graph.get(node,[]):walk(child,depth+1)
  key=norm(root)
  if key not in graph:raise KeyError(root)
- walk(key,0);return "\\n".join(lines)
+ walk(key,0);return "\n".join(lines)
 def mermaid(data):
  lines=["graph TD"]
  for src,deps in data["graph"].items():
   for dep in deps:lines.append(f'  "{src}" --> "{dep}"')
- return "\\n".join(lines)+"\\n"
+ return "\n".join(lines)+"\n"
 def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument("--json",action="store_true");p.add_argument("--mermaid");p.add_argument("--tree");a=p.parse_args()
  data=build_graph(collect())
